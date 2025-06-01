@@ -18,13 +18,8 @@ void * aloca_reg(float emb[], char id[]){
     return reg;
 }
 
-int comparador(void *a, void *b, int pos){
-    if (((treg *)a)->emb[pos] < ((treg *)b)->emb[pos])
-        return -1;
-    else if(((treg *)a)->emb[pos] > ((treg *)b)->emb[pos])
-        return 1;
-    else
-        return 0;  
+double comparador(void *a, void *b, int pos){
+    return ((treg *)a)->emb[pos] - ((treg *)b)->emb[pos];
     }
 
 double distancia(void * a, void *b){
@@ -48,7 +43,7 @@ typedef struct _node{
 
 typedef struct _arv{
     tnode * raiz;
-    int (*cmp)(void *, void *, int);
+    double (*cmp)(void *, void *, int);
     double (*dist) (void *, void *);
     int k;
 }tarv;
@@ -57,7 +52,7 @@ typedef struct _arv{
 
 /*funções desenvolvedor da biblioteca*/
 
-void kdtree_constroi(tarv * arv, int (*cmp)(void *a, void *b, int ),double (*dist) (void *, void *),int k){
+void kdtree_constroi(tarv * arv, double (*cmp)(void *a, void *b, int ),double (*dist) (void *, void *),int k){
     arv->raiz = NULL;
     arv->cmp = cmp;
     arv->dist = dist;
@@ -86,14 +81,14 @@ void test_constroi(){
     /* testes */
     assert(arv.raiz == NULL);
     assert(arv.k == 128);
-    assert(arv.cmp(node1.key,node2.key,0) < 0);
+    assert(arv.cmp(node1.key,node2.key,0) < 0.0);
     assert(strcpy(((treg *)node1.key)->id,"Ana"));
     assert(strcpy(((treg *)node2.key)->id,"Carol"));
     free(node1.key);
     free(node2.key);
 }
 
-void _kdtree_insere(tnode **raiz, void * key, int (*cmp)(void *a, void *b, int),int profund, int k){
+void _kdtree_insere(tnode **raiz, void * key, double (*cmp)(void *a, void *b, int),int profund, int k){
     if(*raiz == NULL){
         *raiz = malloc(sizeof(tnode));
         (*raiz)->key = key;
@@ -137,9 +132,9 @@ void _kdtree_busca(tarv *arv, tnode ** atual, void * key, int profund, double *m
             *menor = *atual;
         }
         int pos = profund % arv->k;
-        int comp = arv->cmp(key, (*atual)->key, pos);
+        double comp = arv->cmp(key, (*atual)->key, pos);
 
-        printf("%s dist %4.3f menor_dist %4.3f comp %d\n", ((treg *)((tnode *)*atual)->key)->id,dist_atual,*menor_dist,comp);
+        printf("%s dist %4.3f menor_dist %4.3f comp %f\n", ((treg *)((tnode *)*atual)->key)->id,dist_atual,*menor_dist,comp);
 
         /* define lado principal para buscar */
         if (comp < 0){
@@ -217,6 +212,8 @@ void test_busca(){
     kdtree_insere(&arv,aloca_reg(emb3,"c"));
     kdtree_insere(&arv,aloca_reg(emb4,"d"));
     kdtree_insere(&arv,aloca_reg(emb5,"e"));
+
+
 
     tnode * raiz = arv.raiz;
     assert(strcmp(((treg *)raiz->dir->key)->id, "d")==0);
